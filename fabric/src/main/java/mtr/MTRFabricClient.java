@@ -19,11 +19,8 @@ public class MTRFabricClient implements ClientModInitializer, ICustomResources {
 
 	@Override
 	public void onInitializeClient() {
-		if (Keys.LIFTS_ONLY) {
-			MTRClientLifts.init();
-		} else {
-			MTRClient.init();
-		}
+		MTRClient.init();
+		MTRClient.initItemModelPredicate();
 		WorldRenderEvents.AFTER_ENTITIES.register(context -> {
 			final PoseStack matrices = context.matrixStack();
 			matrices.pushPose();

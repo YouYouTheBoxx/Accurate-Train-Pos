@@ -2,6 +2,7 @@ package mtr.sound.bve;
 
 import mtr.MTRClient;
 import mtr.client.TrainClientRegistry;
+import mtr.client.TrainProperties;
 import mtr.data.TrainClient;
 import mtr.sound.TrainLoopingSoundInstance;
 import mtr.sound.TrainSoundBase;
@@ -147,7 +148,7 @@ public class BveTrainSound extends TrainSoundBase {
 			if (soundLoopMotor[i] == null) {
 				continue;
 			}
-			soundLoopMotor[i].setData(config.motorData.getVolume(i, speedKph, motorCurrentOutput), config.motorData.getPitch(i, speedKph, motorCurrentOutput), pos);
+			soundLoopMotor[i].setData(config.motorData.getVolume(i, speedKph, motorCurrentOutput) * config.soundCfg.motorVolumeMultiply, config.motorData.getPitch(i, speedKph, motorCurrentOutput), pos);
 		}
 
 		// TODO Play flange sounds
@@ -204,7 +205,7 @@ public class BveTrainSound extends TrainSoundBase {
 			return;
 		}
 
-		final TrainClientRegistry.TrainProperties trainProperties = TrainClientRegistry.getTrainProperties(train.trainId);
+		final TrainProperties trainProperties = TrainClientRegistry.getTrainProperties(train.trainId);
 
 		if (config.soundCfg.joint[0] == null || trainProperties.bogiePosition == 0) {
 			return;
@@ -268,13 +269,13 @@ public class BveTrainSound extends TrainSoundBase {
 		if (event == null) {
 			return;
 		}
-		((ClientLevel) world).playLocalSound(pos, event, SoundSource.BLOCKS, Math.min(1, gain), pitch, true);
+		((ClientLevel) world).playLocalSound(pos, event, SoundSource.BLOCKS, Math.min(1, gain), pitch, false);
 	}
 
 	private static void playLocalSound(Level world, SoundEvent event, BlockPos pos) {
 		if (event == null) {
 			return;
 		}
-		((ClientLevel) world).playLocalSound(pos, event, SoundSource.BLOCKS, 1, 1, true);
+		((ClientLevel) world).playLocalSound(pos, event, SoundSource.BLOCKS, 1, 1, false);
 	}
 }
