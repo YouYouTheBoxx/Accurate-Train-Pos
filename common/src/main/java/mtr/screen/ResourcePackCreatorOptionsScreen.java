@@ -15,7 +15,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 
 import java.nio.file.Path;
-import java.util.Locale;
 import java.util.function.Consumer;
 
 public class ResourcePackCreatorOptionsScreen extends ScreenMapper implements IResourcePackCreatorProperties, ICustomResources, IGui {
@@ -48,22 +47,22 @@ public class ResourcePackCreatorOptionsScreen extends ScreenMapper implements IR
 		super(Text.literal(""));
 		this.resourcePackCreatorScreen = resourcePackCreatorScreen;
 
-		buttonChooseModelFile = UtilitiesClient.newButton(button -> buttonCallback(path -> {
+		buttonChooseModelFile = new Button(0, 0, 0, SQUARE_SIZE, Text.literal(""), button -> buttonCallback(path -> {
 			RenderTrains.creatorProperties.loadModelFile(path);
 			updateControls(false);
 		}));
-		buttonChoosePropertiesFile = UtilitiesClient.newButton(button -> buttonCallback(path -> {
+		buttonChoosePropertiesFile = new Button(0, 0, 0, SQUARE_SIZE, Text.literal(""), button -> buttonCallback(path -> {
 			RenderTrains.creatorProperties.loadPropertiesFile(path);
 			updateControls(false);
 		}));
-		buttonChooseTextureFile = UtilitiesClient.newButton(button -> buttonCallback(path -> {
+		buttonChooseTextureFile = new Button(0, 0, 0, SQUARE_SIZE, Text.literal(""), button -> buttonCallback(path -> {
 			RenderTrains.creatorProperties.loadTextureFile(path);
 			updateControls(false);
 		}));
 
 		textFieldId = new WidgetBetterTextField("my_custom_train_id");
 		textFieldName = new WidgetBetterTextField("My Custom Train Name");
-		colorSelector = new WidgetColorSelector(this, true, this::onUpdateColor);
+		colorSelector = new WidgetColorSelector(this, this::onUpdateColor);
 		textFieldGangwayConnectionId = new WidgetBetterTextField("mtr:textures/entity/sp1900");
 		textFieldTrainBarrierId = new WidgetBetterTextField("mtr:textures/entity/r211");
 		sliderRiderOffset = new WidgetShorterSlider(0, PANEL_WIDTH, 18, value -> {
@@ -72,8 +71,8 @@ public class ResourcePackCreatorOptionsScreen extends ScreenMapper implements IR
 			return Text.translatable("gui.mtr.custom_resources_rider_offset", (value - 2) / 4F).getString();
 		}, null);
 
-		buttonDone = UtilitiesClient.newButton(Text.translatable("gui.done"), button -> onClose());
-		buttonExport = UtilitiesClient.newButton(Text.translatable("gui.mtr.custom_resources_export_resource_pack"), button -> RenderTrains.creatorProperties.export());
+		buttonDone = new Button(0, 0, 0, SQUARE_SIZE, Text.translatable("gui.done"), button -> onClose());
+		buttonExport = new Button(0, 0, 0, SQUARE_SIZE, Text.translatable("gui.mtr.custom_resources_export_resource_pack"), button -> RenderTrains.creatorProperties.export());
 	}
 
 	@Override
@@ -214,7 +213,7 @@ public class ResourcePackCreatorOptionsScreen extends ScreenMapper implements IR
 	}
 
 	private static String formatText(WidgetBetterTextField textField, String text, boolean isFileName) {
-		String cutText = text.toLowerCase(Locale.ENGLISH).replaceAll(isFileName ? "[^\\w:/]" : "\\W", "");
+		String cutText = text.toLowerCase().replaceAll(isFileName ? "[^\\w:/]" : "\\W", "");
 		while (!cutText.isEmpty() && cutText.substring(0, 1).replaceAll("[^a-z]", "").isEmpty()) {
 			cutText = cutText.substring(1);
 		}

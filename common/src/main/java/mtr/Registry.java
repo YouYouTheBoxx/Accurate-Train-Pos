@@ -10,7 +10,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.function.Consumer;
@@ -24,12 +23,7 @@ public class Registry {
 	}
 
 	@ExpectPlatform
-	public static Supplier<CreativeModeTab> getCreativeModeTab(ResourceLocation id, Supplier<ItemStack> supplier) {
-		throw new AssertionError();
-	}
-
-	@ExpectPlatform
-	public static void registerCreativeModeTab(ResourceLocation resourceLocation, Item item) {
+	public static CreativeModeTab getItemGroup(ResourceLocation id, Supplier<ItemStack> supplier) {
 		throw new AssertionError();
 	}
 

@@ -1,11 +1,11 @@
 package mtr.item;
 
 import mtr.Blocks;
-import mtr.CreativeModeTabs;
+import mtr.ItemGroups;
 import mtr.block.BlockPSDAPGBase;
+import mtr.block.BlockPSDAPGDoorBase;
 import mtr.block.BlockPSDTop;
 import mtr.block.IBlock;
-import mtr.block.ITripleBlock;
 import mtr.mappings.Text;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -14,6 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
@@ -24,13 +25,13 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 
 import java.util.List;
 
-public class ItemPSDAPGBase extends ItemWithCreativeTabBase implements IBlock {
+public class ItemPSDAPGBase extends Item implements IBlock {
 
 	private final EnumPSDAPGItem item;
 	private final EnumPSDAPGType type;
 
 	public ItemPSDAPGBase(EnumPSDAPGItem item, EnumPSDAPGType type) {
-		super(type.isLift ? CreativeModeTabs.ESCALATORS_LIFTS : CreativeModeTabs.RAILWAY_FACILITIES);
+		super(new Item.Properties().tab(type.isLift ? ItemGroups.ESCALATORS_LIFTS : ItemGroups.RAILWAY_FACILITIES));
 		this.item = item;
 		this.type = type;
 	}
@@ -54,7 +55,7 @@ public class ItemPSDAPGBase extends ItemWithCreativeTabBase implements IBlock {
 				if (item.isDoor) {
 					BlockState newState = state.setValue(SIDE, x == 0 ? EnumSide.LEFT : EnumSide.RIGHT);
 					if (type.isOdd) {
-						newState = newState.setValue(ITripleBlock.ODD, x > 0 && x < horizontalBlocks - 1);
+						newState = newState.setValue(BlockPSDAPGDoorBase.ODD, x > 0 && x < horizontalBlocks - 1);
 					}
 					world.setBlockAndUpdate(newPos.above(y), newState);
 				} else {
@@ -106,7 +107,7 @@ public class ItemPSDAPGBase extends ItemWithCreativeTabBase implements IBlock {
 						return Blocks.APG_GLASS_END.get().defaultBlockState();
 				}
 			case LIFT_DOOR_1:
-				return Blocks.LIFT_DOOR_EVEN_1.get().defaultBlockState();
+				return Blocks.LIFT_DOOR_1.get().defaultBlockState();
 			case LIFT_DOOR_ODD_1:
 				return Blocks.LIFT_DOOR_ODD_1.get().defaultBlockState();
 			default:

@@ -1,6 +1,6 @@
 package mtr.item;
 
-import mtr.CreativeModeTabs;
+import mtr.ItemGroups;
 import mtr.data.RailwayData;
 import mtr.data.TransportMode;
 import mtr.packet.PacketTrainDataGuiServer;
@@ -8,15 +8,16 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-public class ItemDashboard extends ItemWithCreativeTabBase {
+public class ItemDashboard extends Item {
 
 	private final TransportMode transportMode;
 
 	public ItemDashboard(TransportMode transportMode) {
-		super(CreativeModeTabs.CORE, properties -> properties.stacksTo(1));
+		super(new Item.Properties().tab(ItemGroups.CORE).stacksTo(1));
 		this.transportMode = transportMode;
 	}
 

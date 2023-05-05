@@ -1,31 +1,22 @@
 package mtr.screen;
 
-import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
-import mtr.Icons;
-import mtr.Patreon;
 import mtr.client.ClientData;
 import mtr.client.IDrawing;
 import mtr.client.TrainClientRegistry;
-import mtr.client.TrainProperties;
 import mtr.data.*;
 import mtr.mappings.Text;
-import mtr.mappings.UtilitiesClient;
 import mtr.packet.IPacket;
 import mtr.packet.PacketTrainDataGuiClient;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
-public class SidingScreen extends SavedRailScreenBase<Siding> implements Icons {
+public class SidingScreen extends SavedRailScreenBase<Siding> {
 
 	private boolean isSelectingTrain;
 	private final float oldAcceleration;
@@ -49,16 +40,14 @@ public class SidingScreen extends SavedRailScreenBase<Siding> implements Icons {
 	private static final Component MAX_MANUAL_SPEED = Text.translatable("gui.mtr.max_manual_speed");
 	private static final int MAX_TRAINS_TEXT_LENGTH = 3;
 	private static final int MAX_TRAINS_WIDTH = 80;
-	private static final int DESCRIPTION_WIDTH = 160;
 	private static final int SLIDER_SCALE = 1000;
 	private static final float ACCELERATION_UNIT_CONVERSION_1 = 20 * 20; // m/tick^2 to m/s^2
 	private static final float ACCELERATION_UNIT_CONVERSION_2 = ACCELERATION_UNIT_CONVERSION_1 * 3.6F; // m/tick^2 to km/h/s
-	private static final Map<String, String> WIKIPEDIA_ARTICLES = new HashMap<>();
 
 	public SidingScreen(Siding siding, TransportMode transportMode, DashboardScreen dashboardScreen) {
 		super(siding, transportMode, dashboardScreen, SELECTED_TRAIN_TEXT, MAX_TRAINS_TEXT, ACCELERATION_CONSTANT_TEXT, MANUAL_TO_AUTOMATIC_TIME, MAX_MANUAL_SPEED);
 		this.transportMode = transportMode;
-		buttonSelectTrain = UtilitiesClient.newButton(button -> onSelectingTrain());
+		buttonSelectTrain = new Button(0, 0, 0, SQUARE_SIZE, Text.literal(""), button -> onSelectingTrain());
 		availableTrainsList = new DashboardList(null, null, null, null, this::onAdd, null, null, () -> ClientData.TRAINS_SEARCH, text -> ClientData.TRAINS_SEARCH = text);
 		textFieldMaxTrains = new WidgetBetterTextField(WidgetBetterTextField.TextFieldFilter.POSITIVE_INTEGER, "", MAX_TRAINS_TEXT_LENGTH);
 		sliderAccelerationConstant = new WidgetShorterSlider(0, MAX_TRAINS_WIDTH, Math.round((Train.MAX_ACCELERATION - Train.MIN_ACCELERATION) * SLIDER_SCALE), this::accelerationSliderFormatter, null);
@@ -90,20 +79,20 @@ public class SidingScreen extends SavedRailScreenBase<Siding> implements Icons {
 	protected void init() {
 		super.init();
 
-		IDrawing.setPositionAndWidth(buttonSelectTrain, SQUARE_SIZE + textWidth, SQUARE_SIZE * 2 + TEXT_FIELD_PADDING, width - textWidth - SQUARE_SIZE * 2);
-		IDrawing.setPositionAndWidth(buttonUnlimitedTrains, SQUARE_SIZE + textWidth + MAX_TRAINS_WIDTH + TEXT_FIELD_PADDING + TEXT_FIELD_PADDING, SQUARE_SIZE * 3 + TEXT_FIELD_PADDING * 3 / 2, width - textWidth - SQUARE_SIZE * 2);
+		IDrawing.setPositionAndWidth(buttonSelectTrain, startX + textWidth, SQUARE_SIZE * 2 + TEXT_FIELD_PADDING, SLIDER_WIDTH);
+		IDrawing.setPositionAndWidth(buttonUnlimitedTrains, startX + textWidth + MAX_TRAINS_WIDTH + TEXT_FIELD_PADDING + TEXT_FIELD_PADDING, SQUARE_SIZE * 3 + TEXT_FIELD_PADDING * 3 / 2, SLIDER_WIDTH);
 
 		addDrawableChild(buttonSelectTrain);
 
-		availableTrainsList.y = SQUARE_SIZE;
-		availableTrainsList.height = height - SQUARE_SIZE * 2;
-		availableTrainsList.width = width - DESCRIPTION_WIDTH - SQUARE_SIZE * 3;
+		availableTrainsList.y = SQUARE_SIZE * 2;
+		availableTrainsList.height = height - SQUARE_SIZE * 5;
+		availableTrainsList.width = SLIDER_WIDTH;
 		availableTrainsList.init(this::addDrawableChild);
 
 		buttonIsManual.setChecked(savedRailBase.getIsManual());
 		buttonUnlimitedTrains.setChecked(savedRailBase.getUnlimitedTrains());
 
-		IDrawing.setPositionAndWidth(textFieldMaxTrains, SQUARE_SIZE + textWidth + TEXT_FIELD_PADDING / 2, SQUARE_SIZE * 3 + TEXT_FIELD_PADDING * 3 / 2, MAX_TRAINS_WIDTH - TEXT_FIELD_PADDING);
+		IDrawing.setPositionAndWidth(textFieldMaxTrains, startX + textWidth + TEXT_FIELD_PADDING / 2, SQUARE_SIZE * 3 + TEXT_FIELD_PADDING * 3 / 2, MAX_TRAINS_WIDTH - TEXT_FIELD_PADDING);
 		textFieldMaxTrains.setValue(savedRailBase.getUnlimitedTrains() ? "" : String.valueOf(savedRailBase.getMaxTrains() + 1));
 		textFieldMaxTrains.setResponder(text -> {
 			buttonUnlimitedTrains.setChecked(text.isEmpty());
@@ -113,20 +102,20 @@ public class SidingScreen extends SavedRailScreenBase<Siding> implements Icons {
 			setIsSelectingTrain(false);
 		});
 
-		UtilitiesClient.setWidgetX(sliderAccelerationConstant, SQUARE_SIZE + textWidth);
-		UtilitiesClient.setWidgetY(sliderAccelerationConstant, SQUARE_SIZE * 4 + TEXT_FIELD_PADDING * 2);
+		sliderAccelerationConstant.x = startX + textWidth;
+		sliderAccelerationConstant.y = SQUARE_SIZE * 4 + TEXT_FIELD_PADDING * 2;
 		sliderAccelerationConstant.setHeight(SQUARE_SIZE);
 		sliderAccelerationConstant.setValue(Math.round((savedRailBase.getAccelerationConstant() - Train.MIN_ACCELERATION) * SLIDER_SCALE));
 
-		IDrawing.setPositionAndWidth(buttonIsManual, SQUARE_SIZE, SQUARE_SIZE * 6 + TEXT_FIELD_PADDING * 2, width - textWidth - SQUARE_SIZE * 2);
+		IDrawing.setPositionAndWidth(buttonIsManual, startX, SQUARE_SIZE * 6 + TEXT_FIELD_PADDING * 2, SLIDER_WIDTH);
 
-		UtilitiesClient.setWidgetX(sliderMaxManualSpeed, SQUARE_SIZE + textWidth);
-		UtilitiesClient.setWidgetY(sliderMaxManualSpeed, SQUARE_SIZE * 7 + TEXT_FIELD_PADDING * 2);
+		sliderMaxManualSpeed.x = startX + textWidth;
+		sliderMaxManualSpeed.y = SQUARE_SIZE * 7 + TEXT_FIELD_PADDING * 2;
 		sliderMaxManualSpeed.setHeight(SQUARE_SIZE);
 		sliderMaxManualSpeed.setValue(savedRailBase.getMaxManualSpeed());
 
-		UtilitiesClient.setWidgetY(sliderDwellTimeMin, SQUARE_SIZE * 8 + TEXT_FIELD_PADDING * 2);
-		UtilitiesClient.setWidgetY(sliderDwellTimeSec, SQUARE_SIZE * 17 / 2 + TEXT_FIELD_PADDING * 2);
+		sliderDwellTimeMin.y = SQUARE_SIZE * 8 + TEXT_FIELD_PADDING * 2;
+		sliderDwellTimeSec.y = SQUARE_SIZE * 17 / 2 + TEXT_FIELD_PADDING * 2;
 
 		setIsSelectingTrain(false);
 
@@ -150,35 +139,13 @@ public class SidingScreen extends SavedRailScreenBase<Siding> implements Icons {
 	public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
 		super.render(matrices, mouseX, mouseY, delta);
 		if (!isSelectingTrain) {
-			font.draw(matrices, SELECTED_TRAIN_TEXT, SQUARE_SIZE, SQUARE_SIZE * 2 + TEXT_FIELD_PADDING + TEXT_PADDING, ARGB_WHITE);
+			font.draw(matrices, SELECTED_TRAIN_TEXT, startX, SQUARE_SIZE * 2 + TEXT_FIELD_PADDING + TEXT_PADDING, ARGB_WHITE);
 			if (showScheduleControls) {
-				font.draw(matrices, MAX_TRAINS_TEXT, SQUARE_SIZE, SQUARE_SIZE * 3 + TEXT_FIELD_PADDING * 3 / 2F + TEXT_PADDING, ARGB_WHITE);
-				font.draw(matrices, ACCELERATION_CONSTANT_TEXT, SQUARE_SIZE, SQUARE_SIZE * 4 + TEXT_FIELD_PADDING * 2 + TEXT_PADDING, ARGB_WHITE);
+				font.draw(matrices, MAX_TRAINS_TEXT, startX, SQUARE_SIZE * 3 + TEXT_FIELD_PADDING * 3 / 2F + TEXT_PADDING, ARGB_WHITE);
+				font.draw(matrices, ACCELERATION_CONSTANT_TEXT, startX, SQUARE_SIZE * 4 + TEXT_FIELD_PADDING * 2 + TEXT_PADDING, ARGB_WHITE);
 				if (buttonIsManual.selected()) {
-					font.draw(matrices, MAX_MANUAL_SPEED, SQUARE_SIZE, SQUARE_SIZE * 7 + TEXT_FIELD_PADDING * 2 + TEXT_PADDING, ARGB_WHITE);
-					font.draw(matrices, MANUAL_TO_AUTOMATIC_TIME, SQUARE_SIZE, SQUARE_SIZE * 8 + TEXT_FIELD_PADDING * 2 + TEXT_PADDING, ARGB_WHITE);
-				}
-			}
-		} else {
-			final int index = availableTrainsList.getHoverItemIndex();
-			if (index >= 0) {
-				final TrainProperties properties = TrainClientRegistry.getTrainProperties(transportMode, index);
-				final int spacing = TrainType.getSpacing(properties.baseTrainType);
-				final int cars = (int) Math.floor(savedRailBase.railLength / spacing);
-				int y = SQUARE_SIZE;
-				y = drawWrappedText(matrices, properties.name, y, ARGB_WHITE);
-				y = drawWrappedText(matrices, Text.translatable("gui.mtr.vehicle_length", spacing - 1), y, ARGB_WHITE);
-				y = drawWrappedText(matrices, Text.translatable("gui.mtr.cars_to_spawn", (cars == 0 ? WARNING + " " : "") + Math.min(cars, savedRailBase.transportMode.maxLength)), y, ARGB_WHITE);
-				if (properties.description != null) {
-					for (final String text : properties.description.split("[|\n]")) {
-						y = drawWrappedText(matrices, Text.literal(text), y, ARGB_LIGHT_GRAY);
-					}
-				}
-				if (properties.wikipediaArticle != null) {
-					final String fullText = fetchWikipediaArticle(properties.wikipediaArticle);
-					for (final String text : fullText.split("\n")) {
-						y = drawWrappedText(matrices, Text.literal(text), y, ARGB_LIGHT_GRAY);
-					}
+					font.draw(matrices, MAX_MANUAL_SPEED, startX, SQUARE_SIZE * 7 + TEXT_FIELD_PADDING * 2 + TEXT_PADDING, ARGB_WHITE);
+					font.draw(matrices, MANUAL_TO_AUTOMATIC_TIME, startX, SQUARE_SIZE * 8 + TEXT_FIELD_PADDING * 2 + TEXT_PADDING, ARGB_WHITE);
 				}
 			}
 		}
@@ -239,16 +206,9 @@ public class SidingScreen extends SavedRailScreenBase<Siding> implements Icons {
 	}
 
 	private void onSelectingTrain() {
-		final List<TrainForList> trainsForListTemp = new ArrayList<>();
-		final List<TrainForList> trainsForListUnavailable = new ArrayList<>();
-
-		TrainClientRegistry.forEach(transportMode, (id, trainProperties) -> {
-			final TrainForList trainForList = new TrainForList(savedRailBase, id, trainProperties);
-			(trainForList.isAvailable ? trainsForListTemp : trainsForListUnavailable).add(trainForList);
-		});
-
-		trainsForListTemp.addAll(trainsForListUnavailable);
-		availableTrainsList.setData(trainsForListTemp, false, false, false, false, true, false);
+		final List<DataConverter> trainList = new ArrayList<>();
+		TrainClientRegistry.forEach(transportMode, (id, trainProperties) -> trainList.add(new DataConverter(trainProperties.name.getString(), trainProperties.color)));
+		availableTrainsList.setData(trainList, false, false, false, false, true, false);
 		setIsSelectingTrain(true);
 	}
 
@@ -263,17 +223,12 @@ public class SidingScreen extends SavedRailScreenBase<Siding> implements Icons {
 		sliderDwellTimeMin.visible = !isSelectingTrain && buttonIsManual.selected();
 		sliderDwellTimeSec.visible = !isSelectingTrain && buttonIsManual.selected();
 		buttonSelectTrain.setMessage(TrainClientRegistry.getTrainProperties(savedRailBase.getTrainId()).name);
-		availableTrainsList.x = isSelectingTrain ? SQUARE_SIZE : width;
+		availableTrainsList.x = isSelectingTrain ? width / 2 - SLIDER_WIDTH / 2 : width;
 	}
 
 	private void onAdd(NameColorDataBase data, int index) {
-		if (data instanceof TrainForList) {
-			final String baseTrainType = ((TrainForList) data).trainProperties.baseTrainType;
-			if (savedRailBase.isValidVehicle(TrainType.getSpacing(baseTrainType))) {
-				savedRailBase.setTrainIdAndBaseType(((TrainForList) data).trainId, baseTrainType, packet -> PacketTrainDataGuiClient.sendUpdate(IPacket.PACKET_UPDATE_SIDING, packet));
-				setIsSelectingTrain(false);
-			}
-		}
+		savedRailBase.setTrainIdAndBaseType(TrainClientRegistry.getTrainId(transportMode, index), TrainClientRegistry.getTrainProperties(transportMode, index).baseTrainType, packet -> PacketTrainDataGuiClient.sendUpdate(IPacket.PACKET_UPDATE_SIDING, packet));
+		setIsSelectingTrain(false);
 	}
 
 	private String accelerationSliderFormatter(int value) {
@@ -284,55 +239,5 @@ public class SidingScreen extends SavedRailScreenBase<Siding> implements Icons {
 	private String speedSliderFormatter(int value) {
 		final RailType railType = Train.convertMaxManualSpeed(value);
 		return railType == null ? Text.translatable("gui.mtr.unlimited").getString() : String.format("%s km/h", railType.speedLimit);
-	}
-
-	private int drawWrappedText(PoseStack matrices, Component component, int y, int color) {
-		final List<FormattedCharSequence> splitText = font.split(component, DESCRIPTION_WIDTH);
-		int newY = y;
-		for (final FormattedCharSequence formattedCharSequence : splitText) {
-			final int nextY = newY + TEXT_HEIGHT + 2;
-			if (nextY > height - SQUARE_SIZE - TEXT_HEIGHT) {
-				font.draw(matrices, "...", width - DESCRIPTION_WIDTH - SQUARE_SIZE, newY, color);
-				return height;
-			} else {
-				font.draw(matrices, formattedCharSequence, width - DESCRIPTION_WIDTH - SQUARE_SIZE, newY, color);
-			}
-			newY = nextY;
-		}
-		return newY + TEXT_PADDING;
-	}
-
-	private static String fetchWikipediaArticle(String wikipediaArticle) {
-		final String result = WIKIPEDIA_ARTICLES.get(wikipediaArticle);
-		if (result == null) {
-			CompletableFuture.runAsync(() -> Patreon.openConnectionSafeJson("https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext&exintro&titles=" + wikipediaArticle, jsonElement -> {
-				final JsonObject pagesObject = jsonElement.getAsJsonObject().getAsJsonObject("query").getAsJsonObject("pages");
-				pagesObject.entrySet().stream().findFirst().ifPresent(entry -> WIKIPEDIA_ARTICLES.put(wikipediaArticle, pagesObject.getAsJsonObject(entry.getKey()).get("extract").getAsString()));
-			}));
-			WIKIPEDIA_ARTICLES.put(wikipediaArticle, "");
-			return "";
-		} else {
-			return result;
-		}
-	}
-
-	private static class TrainForList extends NameColorDataBase {
-
-		private final String trainId;
-		private final TrainProperties trainProperties;
-		private final boolean isAvailable;
-
-		private TrainForList(Siding savedRailBase, String trainId, TrainProperties trainProperties) {
-			this.trainId = trainId;
-			this.trainProperties = trainProperties;
-			isAvailable = savedRailBase.isValidVehicle(TrainType.getSpacing(trainProperties.baseTrainType));
-			this.name = (isAvailable ? "" : WARNING + " ") + trainProperties.name.getString();
-			this.color = isAvailable ? trainProperties.color : 0;
-		}
-
-		@Override
-		protected boolean hasTransportMode() {
-			return false;
-		}
 	}
 }

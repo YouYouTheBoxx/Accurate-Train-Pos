@@ -22,6 +22,7 @@ public class RailwayDataCoolDownModule extends RailwayDataModuleBase {
 	private final Map<Player, Integer> playerShiftCoolDowns = new HashMap<>();
 
 	public static final int SHIFT_ACTIVATE_TICKS = 30;
+	public static final int SHIFT_PERSIST_TICKS = 60;
 
 	public RailwayDataCoolDownModule(RailwayData railwayData, Level world, Map<BlockPos, Map<BlockPos, Rail>> rails) {
 		super(railwayData, world, rails);
@@ -47,9 +48,19 @@ public class RailwayDataCoolDownModule extends RailwayDataModuleBase {
 			final int oldShiftCoolDown = playerShiftCoolDowns.getOrDefault(player, 0);
 			final int shiftCoolDown;
 			if (player.isShiftKeyDown()) {
-				shiftCoolDown = Math.min(SHIFT_ACTIVATE_TICKS, oldShiftCoolDown + 1);
+				if (oldShiftCoolDown < 0) {
+					shiftCoolDown = 0;
+				} else {
+					shiftCoolDown = Math.min(1000, oldShiftCoolDown + 1);
+				}
 			} else {
-				shiftCoolDown = 0;
+				if (oldShiftCoolDown > SHIFT_ACTIVATE_TICKS) {
+					shiftCoolDown = 0;
+				} else if (oldShiftCoolDown > 0) {
+					shiftCoolDown = -1000; // Not activated, so don't persist
+				} else {
+					shiftCoolDown = Math.max(-1000, oldShiftCoolDown - 1);
+				}
 			}
 			if (shiftCoolDown != oldShiftCoolDown) {
 				playerShiftCoolDowns.put(player, shiftCoolDown);
@@ -73,7 +84,7 @@ public class RailwayDataCoolDownModule extends RailwayDataModuleBase {
 
 	public void onPlayerJoin(ServerPlayer serverPlayer) {
 		playerRidingCoolDown.put(serverPlayer, 2);
-		playerShiftCoolDowns.put(serverPlayer, 0);
+		playerShiftCoolDowns.put(serverPlayer, -1000);
 	}
 
 	public void onPlayerDisconnect(Player player) {
@@ -122,6 +133,7 @@ public class RailwayDataCoolDownModule extends RailwayDataModuleBase {
 	}
 
 	public boolean shouldDismount(Player player) {
-		return playerShiftCoolDowns.getOrDefault(player, 0) == SHIFT_ACTIVATE_TICKS;
+		final int shiftCoolDown = playerShiftCoolDowns.getOrDefault(player, 0);
+		return shiftCoolDown > SHIFT_ACTIVATE_TICKS || (shiftCoolDown < 0 && shiftCoolDown > -SHIFT_PERSIST_TICKS);
 	}
 }

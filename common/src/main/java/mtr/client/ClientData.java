@@ -3,14 +3,18 @@ package mtr.client;
 import mtr.KeyMappings;
 import mtr.MTRClient;
 import mtr.data.*;
+import mtr.entity.EntityLift;
 import mtr.mappings.Text;
+import mtr.mappings.UtilitiesClient;
 import mtr.packet.PacketTrainDataGuiClient;
+import mtr.screen.LiftSelectionScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.*;
@@ -35,15 +39,13 @@ public final class ClientData {
 	public static final Set<Siding> SIDINGS = new HashSet<>();
 	public static final Set<Route> ROUTES = new HashSet<>();
 	public static final Set<Depot> DEPOTS = new HashSet<>();
-	public static final Set<LiftClient> LIFTS = new HashSet<>();
 	public static final SignalBlocks SIGNAL_BLOCKS = new SignalBlocks();
-	public static final Map<UUID, Boolean> OCCUPIED_RAILS = new HashMap<>();
 	public static final Map<BlockPos, Map<BlockPos, Rail>> RAILS = new HashMap<>();
 	public static final Set<TrainClient> TRAINS = new HashSet<>();
 	public static final List<DataConverter> RAIL_ACTIONS = new ArrayList<>();
 	public static final Map<Long, Set<ScheduleEntry>> SCHEDULES_FOR_PLATFORM = new HashMap<>();
 
-	public static final ClientCache DATA_CACHE = new ClientCache(STATIONS, PLATFORMS, SIDINGS, ROUTES, DEPOTS, LIFTS);
+	public static final ClientCache DATA_CACHE = new ClientCache(STATIONS, PLATFORMS, SIDINGS, ROUTES, DEPOTS);
 
 	private static final Map<UUID, Integer> PLAYER_RIDING_COOL_DOWN = new HashMap<>();
 
@@ -73,6 +75,14 @@ public final class ClientData {
 		final Minecraft minecraftClient = Minecraft.getInstance();
 		final Player player = minecraftClient.player;
 		if (player != null) {
+			final Entity vehicle = player.getVehicle();
+			if (vehicle instanceof EntityLift) {
+				if (KeyMappings.LIFT_MENU.isDown() && !(minecraftClient.screen instanceof LiftSelectionScreen)) {
+					UtilitiesClient.setScreen(minecraftClient, new LiftSelectionScreen((EntityLift) vehicle));
+				}
+				player.displayClientMessage(Text.translatable("gui.mtr.press_to_select_floor", KeyMappings.LIFT_MENU.getTranslatedKeyMessage()), true);
+			}
+
 			if (player.isShiftKeyDown()) {
 				shiftHoldingTicks += MTRClient.getLastFrameDuration();
 			} else {
@@ -133,44 +143,6 @@ public final class ClientData {
 		});
 	}
 
-	public static void updateLifts(Minecraft client, FriendlyByteBuf packet) {
-		final Set<LiftClient> liftsToUpdate = new HashSet<>();
-
-		while (packet.isReadable()) {
-			liftsToUpdate.add(new LiftClient(packet));
-		}
-
-		client.execute(() -> liftsToUpdate.forEach(newLift -> {
-			final LiftClient existingLift = DATA_CACHE.liftsClientIdMap.get(newLift.id);
-			if (existingLift == null) {
-				LIFTS.add(newLift);
-				ClientData.DATA_CACHE.syncLiftIds();
-			} else {
-				existingLift.copyFromLift(newLift);
-			}
-		}));
-	}
-
-	public static void deleteLifts(Minecraft client, FriendlyByteBuf packet) {
-		final Set<Long> liftIdsToKeep = new HashSet<>();
-
-		final int liftsCount = packet.readInt();
-		for (int i = 0; i < liftsCount; i++) {
-			liftIdsToKeep.add(packet.readLong());
-		}
-
-		client.execute(() -> {
-			final Set<LiftClient> liftsToRemove = new HashSet<>();
-			LIFTS.forEach(lift -> {
-				if (!liftIdsToKeep.contains(lift.id)) {
-					liftsToRemove.add(lift);
-				}
-			});
-			liftsToRemove.forEach(LIFTS::remove);
-			ClientData.DATA_CACHE.syncLiftIds();
-		});
-	}
-
 	public static void updateTrainPassengers(Minecraft client, FriendlyByteBuf packet) {
 		final TrainClient train = getTrainById(packet.readLong());
 		final float percentageX = packet.readFloat();
@@ -188,26 +160,6 @@ public final class ClientData {
 		final UUID uuid = packet.readUUID();
 		if (train != null) {
 			client.execute(() -> train.updateRiderPercentages(uuid, percentageX, percentageZ));
-		}
-	}
-
-	public static void updateLiftPassengers(Minecraft client, FriendlyByteBuf packet) {
-		final LiftClient lift = DATA_CACHE.liftsClientIdMap.get(packet.readLong());
-		final float percentageX = packet.readFloat();
-		final float percentageZ = packet.readFloat();
-		final UUID uuid = packet.readUUID();
-		if (lift != null) {
-			client.execute(() -> lift.startRidingClient(uuid, percentageX, percentageZ));
-		}
-	}
-
-	public static void updateLiftPassengerPosition(Minecraft client, FriendlyByteBuf packet) {
-		final LiftClient lift = DATA_CACHE.liftsClientIdMap.get(packet.readLong());
-		final float percentageX = packet.readFloat();
-		final float percentageZ = packet.readFloat();
-		final UUID uuid = packet.readUUID();
-		if (lift != null) {
-			client.execute(() -> lift.updateRiderPercentages(uuid, percentageX, percentageZ));
 		}
 	}
 
@@ -249,17 +201,9 @@ public final class ClientData {
 			signalBlockStatus.put(packet.readLong(), packet.readBoolean());
 		}
 
-		final Map<UUID, Boolean> occupiedRails = new HashMap<>();
-		final int occupiedRailsCount = packet.readInt();
-		for (int i = 0; i < occupiedRailsCount; i++) {
-			occupiedRails.put(packet.readUUID(), packet.readBoolean());
-		}
-
 		client.execute(() -> {
 			clearAndAddAll(SCHEDULES_FOR_PLATFORM, tempSchedulesForPlatform);
 			SIGNAL_BLOCKS.writeSignalBlockStatus(signalBlockStatus);
-			OCCUPIED_RAILS.clear();
-			OCCUPIED_RAILS.putAll(occupiedRails);
 		});
 	}
 
@@ -270,12 +214,10 @@ public final class ClientData {
 		clearAndAddAll(SIDINGS, deserializeData(packetCopy, Siding::new));
 		clearAndAddAll(ROUTES, deserializeData(packetCopy, Route::new));
 		clearAndAddAll(DEPOTS, deserializeData(packetCopy, Depot::new));
-		clearAndAddAll(LIFTS, deserializeData(packetCopy, LiftClient::new));
 		clearAndAddAll(SIGNAL_BLOCKS.signalBlocks, deserializeData(packetCopy, SignalBlocks.SignalBlock::new));
 
 		TRAINS.clear();
 		ClientData.DATA_CACHE.sync();
-		ClientData.DATA_CACHE.refreshDynamicResources();
 		SIGNAL_BLOCKS.writeCache();
 	}
 
