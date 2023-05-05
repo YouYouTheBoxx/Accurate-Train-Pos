@@ -1,11 +1,8 @@
 package mtr.sound.bve;
 
-import mtr.mappings.RegistryUtilities;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import org.apache.commons.lang3.StringUtils;
-
-import java.util.Locale;
 
 public class ConfigFile {
 
@@ -33,8 +30,6 @@ public class ConfigFile {
 	public final SoundEvent shoe;
 
 	public final int motorNoiseDataType;
-
-	public final float motorVolumeMultiply;
 
 	public final float breakerDelay;
 	public final float regenerationLimit;
@@ -71,11 +66,10 @@ public class ConfigFile {
 		SoundEvent shoe = null;
 
 		int motorNoiseDataType = 5; // 4 or 5
-		float motorVolumeMultiply = 1;
-		float breakerDelay = 0;
-		float regenerationLimit = 0; // m/s
+		float breakerDelay = 0.5F;
+		float regenerationLimit = 8F / 3.6F; // m/s
 		float motorOutputAtCoast = 0.4F;
-		float doorCloseSoundLength = 1;
+		float doorCloseSoundLength = 2;
 
 		for (final String line : lines) {
 			final String trimLine = line.trim().replaceAll("\\s*(;|#|//).+", "");
@@ -89,21 +83,18 @@ public class ConfigFile {
 					continue;
 				}
 
-				final String key = tokens[0].trim().toLowerCase(Locale.ENGLISH).replaceAll("\\s", "");
-				final String value = tokens[1].trim().toLowerCase(Locale.ENGLISH).replace("\\", "/").replaceAll("\\.wav|\\s|.+/", "");
+				final String key = tokens[0].trim().toLowerCase().replaceAll("\\s", "");
+				final String value = tokens[1].trim().toLowerCase().replace("\\", "/").replaceAll("\\.wav|\\s|.+/", "");
 				if (StringUtils.isEmpty(value)) {
 					continue;
 				}
 
-				final SoundEvent valueAsSoundEvent = RegistryUtilities.createSoundEvent(new ResourceLocation(config.audioBaseName + value));
+				final SoundEvent valueAsSoundEvent = new SoundEvent(new ResourceLocation(config.audioBaseName + value));
 				switch (section) {
 					case "mtr":
 						switch (key) {
 							case "motornoisedatatype":
 								motorNoiseDataType = Integer.parseInt(value);
-								break;
-							case "motorvolumemultiply":
-								motorVolumeMultiply = Float.parseFloat(value);
 								break;
 							case "doorclosesoundlength":
 								doorCloseSoundLength = Float.parseFloat(value);
@@ -207,7 +198,7 @@ public class ConfigFile {
 						}
 				}
 			} else if (trimLine.startsWith("[") && trimLine.endsWith("]")) {
-				section = trimLine.substring(1, trimLine.length() - 1).trim().replace(" ", "").toLowerCase(Locale.ENGLISH);
+				section = trimLine.substring(1, trimLine.length() - 1).trim().replace(" ", "").toLowerCase();
 			}
 		}
 
@@ -233,7 +224,6 @@ public class ConfigFile {
 		this.noise = noise;
 		this.shoe = shoe;
 		this.motorNoiseDataType = motorNoiseDataType;
-		this.motorVolumeMultiply = motorVolumeMultiply;
 		this.breakerDelay = breakerDelay;
 		this.regenerationLimit = regenerationLimit;
 		this.motorOutputAtCoast = motorOutputAtCoast;

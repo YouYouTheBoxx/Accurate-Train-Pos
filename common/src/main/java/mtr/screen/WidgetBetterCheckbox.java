@@ -2,7 +2,6 @@ package mtr.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import mtr.data.IGui;
-import mtr.mappings.UtilitiesClient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.network.chat.Component;
@@ -23,9 +22,9 @@ public class WidgetBetterCheckbox extends Checkbox implements IGui {
 	}
 
 	@Override
-	public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
-		super.render(matrices, mouseX, mouseY, delta);
-		drawString(matrices, Minecraft.getInstance().font, getMessage(), UtilitiesClient.getWidgetX(this) + 24, UtilitiesClient.getWidgetY(this) + (height - 8) / 2, ARGB_WHITE);
+	public void renderButton(PoseStack matrices, int mouseX, int mouseY, float delta) {
+		super.renderButton(matrices, mouseX, mouseY, delta);
+		drawString(matrices, Minecraft.getInstance().font, getMessage(), x + 24, y + (height - 8) / 2, ARGB_WHITE);
 	}
 
 	public void setChecked(boolean checked) {

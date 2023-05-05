@@ -1,7 +1,0 @@
-{
-	"parent": "item/generated",
-	"textures": {
-		"layer0": "mtr:item/dashboard",
-		"layer1": "mtr:item/airplane_dashboard"
-	}
-}

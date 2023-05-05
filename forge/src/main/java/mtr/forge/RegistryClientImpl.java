@@ -1,6 +1,6 @@
 package mtr.forge;
 
-import mtr.MTRClient;
+import mtr.client.ClientData;
 import mtr.mappings.*;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -68,7 +68,15 @@ public class RegistryClientImpl {
 
 		@Override
 		public int getColor(BlockState blockState, BlockAndTintGetter blockAndTintGetter, BlockPos pos, int i) {
-			return MTRClient.getStationColor(pos);
+			final int defaultColor = 0x7F7F7F;
+			if (pos != null) {
+				try {
+					return ClientData.STATIONS.stream().filter(station1 -> station1.inArea(pos.getX(), pos.getZ())).findFirst().map(station2 -> station2.color).orElse(defaultColor);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			return defaultColor;
 		}
 	}
 }
