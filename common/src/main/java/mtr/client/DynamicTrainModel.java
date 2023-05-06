@@ -120,7 +120,6 @@ public class DynamicTrainModel extends ModelTrainBase implements IResourcePackCr
 	}
 
 	@Override
-<<<<<<< HEAD
 	protected void render(PoseStack matrices, VertexConsumer vertices, RenderStage renderStage, int light, float doorLeftX, float doorRightX, float doorLeftZ, float doorRightZ, int currentCar, int trainCars, boolean head1IsFront, boolean renderDetails){
 		this.render(matrices, vertices, renderStage, light, doorLeftX, doorRightX, doorLeftZ, doorRightZ, currentCar, trainCars, head1IsFront, renderDetails, false, 0);
 	}

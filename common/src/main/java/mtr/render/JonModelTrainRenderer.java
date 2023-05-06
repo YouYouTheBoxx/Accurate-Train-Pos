@@ -85,8 +85,8 @@ public class JonModelTrainRenderer extends TrainRendererBase implements IGui {
 
 		matrices.pushPose();
 		matrices.translate(x, y, z);
-		matrices.mulPose(Vector3f.YP.rotation((float) Math.PI + yaw));
-		matrices.mulPose(Vector3f.XP.rotation((float) Math.PI + (hasPitch ? pitch : 0)));
+		UtilitiesClient.rotateY(matrices, (float) Math.PI + yaw);
+		UtilitiesClient.rotateX(matrices, (float) Math.PI + (hasPitch ? pitch : 0));
 
 		final int light = LightTexture.pack(world.getBrightness(LightLayer.BLOCK, posAverage), world.getBrightness(LightLayer.SKY, posAverage));
 
@@ -94,7 +94,7 @@ public class JonModelTrainRenderer extends TrainRendererBase implements IGui {
 			final boolean isBoat = train.transportMode == TransportMode.BOAT;
 
 			matrices.translate(0, isBoat ? 0.875 : 0.5, 0);
-			matrices.mulPose(Vector3f.YP.rotationDegrees(90));
+			UtilitiesClient.rotateYDegrees(matrices, 90);
 
 			final EntityModel<? extends Entity> model = isBoat ? MODEL_BOAT : MODEL_MINECART;
 			final VertexConsumer vertexConsumer = vertexConsumers.getBuffer(model.renderType(resolveTexture(textureId, textureId -> textureId + ".png")));
@@ -124,19 +124,19 @@ public class JonModelTrainRenderer extends TrainRendererBase implements IGui {
 
 					matrices.popPose();
 					matrices.pushPose();
-
-					matrices.translate(xBF, yBF, zBF);
-					matrices.mulPose(Vector3f.YP.rotation((float) Math.PI + yawBF));
-					matrices.mulPose(Vector3f.YP.rotation((float) Math.PI + (hasPitch ? pitchBF : 0)));
+					
+					matrices.translate(xBF, yBF + 1, zBF);
+					UtilitiesClient.rotateY(matrices, (float) Math.PI + yawBF);
+					UtilitiesClient.rotateX(matrices, (float) Math.PI + (hasPitch ? pitchBF : 0));
 
 					MODEL_BOGIE.render(matrices, vertexConsumers, light, 0);
 
 					matrices.popPose();
 					matrices.pushPose();
-
-					matrices.translate(xBR, yBR, zBR);
-					matrices.mulPose(Vector3f.YP.rotation((float) Math.PI + yawBR));
-					matrices.mulPose(Vector3f.YP.rotation((float) Math.PI + (hasPitch ? pitchBR : 0)));
+					
+					matrices.translate(xBR, yBR + 1, zBR);
+					UtilitiesClient.rotateY(matrices, (float) Math.PI + yawBR);
+					UtilitiesClient.rotateX(matrices, (float) Math.PI + (hasPitch ? pitchBR : 0));
 
 					MODEL_BOGIE.render(matrices, vertexConsumers, light, 0);
 				}
@@ -145,18 +145,18 @@ public class JonModelTrainRenderer extends TrainRendererBase implements IGui {
 				matrices.popPose();
 				matrices.pushPose();
 
-				matrices.translate(xBF, yBF, zBF);
-				matrices.mulPose(Vector3f.YP.rotation((float) Math.PI + yawBF));
-				matrices.mulPose(Vector3f.YP.rotation((float) Math.PI + (hasPitch ? pitchBF : 0)));
+				matrices.translate(xBF, yBF + 1, zBF);
+				UtilitiesClient.rotateY(matrices, (float) Math.PI + yawBF);
+				UtilitiesClient.rotateX(matrices, (float) Math.PI + (hasPitch ? pitchBF : 0));
 
 				model.render(matrices, vertexConsumers, train, resolveTexture(textureId, textureId -> textureId + ".png"), light, doorLeftValue, doorRightValue, train.isDoorOpening(), carIndex, train.trainCars, !train.isReversed(), train.getIsOnRoute(), isTranslucentBatch, renderDetails, atPlatform, true, 0);
 
 				matrices.popPose();
 				matrices.pushPose();
 
-				matrices.translate(xBR, yBR, zBR);
-				matrices.mulPose(Vector3f.YP.rotation((float) Math.PI + yawBR));
-				matrices.mulPose(Vector3f.YP.rotation((float) Math.PI + (hasPitch ? pitchBR : 0)));
+				matrices.translate(xBR, yBR + 1, zBR);
+				UtilitiesClient.rotateY(matrices, (float) Math.PI + yawBR);
+				UtilitiesClient.rotateX(matrices, (float) Math.PI + (hasPitch ? pitchBR : 0));
 
 				model.render(matrices, vertexConsumers, train, resolveTexture(textureId, textureId -> textureId + ".png"), light, doorLeftValue, doorRightValue, train.isDoorOpening(), carIndex, train.trainCars, !train.isReversed(), train.getIsOnRoute(), isTranslucentBatch, renderDetails, atPlatform, true, 1);
 			}
@@ -165,10 +165,10 @@ public class JonModelTrainRenderer extends TrainRendererBase implements IGui {
 		if (train.transportMode == TransportMode.CABLE_CAR && !isTranslucentBatch) {
 			matrices.translate(0, TransportMode.CABLE_CAR.railOffset + 0.5, 0);
 			if (!hasPitch) {
-				matrices.mulPose(Vector3f.XP.rotation(pitch));
+				UtilitiesClient.rotateX(matrices, pitch);
 			}
 			if (trainId.endsWith("_rht")) {
-				matrices.mulPose(Vector3f.YP.rotationDegrees(180));
+				UtilitiesClient.rotateYDegrees(matrices, 180);
 			}
 			MODEL_CABLE_CAR_GRIP.render(matrices, vertexConsumers, light);
 		}
