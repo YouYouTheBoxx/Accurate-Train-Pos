@@ -26,10 +26,10 @@ public class RouteMapGenerator implements IGui {
 
 	public static final int PIXEL_SCALE = 4;
 	private static final int MIN_VERTICAL_SIZE = 5;
-	private static final String LOGO_RESOURCE = "textures/sign/logo.png";
-	private static final String EXIT_RESOURCE = "textures/sign/exit_letter_blank.png";
-	private static final String ARROW_RESOURCE = "textures/sign/arrow.png";
-	private static final String CIRCLE_RESOURCE = "textures/sign/circle.png";
+	private static final String LOGO_RESOURCE = "textures/block/sign/logo.png";
+	private static final String EXIT_RESOURCE = "textures/block/sign/exit_letter_blank.png";
+	private static final String ARROW_RESOURCE = "textures/block/sign/arrow.png";
+	private static final String CIRCLE_RESOURCE = "textures/block/sign/circle.png";
 	private static final String TEMP_CIRCULAR_MARKER = "temp_circular_marker";
 	private static final int PIXEL_RESOLUTION = 24;
 
@@ -41,12 +41,12 @@ public class RouteMapGenerator implements IGui {
 		fontSizeSmall = fontSizeBig / 2;
 	}
 
-	public static NativeImage generatePixelatedText(String text, int textColor, int maxWidth, boolean fullPixel) {
+	public static NativeImage generatePixelatedText(String text, int textColor, int maxWidth, float cjkSizeRatio, boolean fullPixel) {
 		try {
 			final int scale = fullPixel ? 1 : PIXEL_SCALE;
 			final int newMaxWidth = maxWidth / scale;
 			final int[] dimensions = new int[2];
-			final byte[] pixels = ClientData.DATA_CACHE.getTextPixels(text, dimensions, newMaxWidth, Integer.MAX_VALUE, PIXEL_RESOLUTION, PIXEL_RESOLUTION, 0, HorizontalAlignment.CENTER);
+			final byte[] pixels = ClientData.DATA_CACHE.getTextPixels(text, dimensions, newMaxWidth, Integer.MAX_VALUE, Math.round(PIXEL_RESOLUTION * (cjkSizeRatio > 0 ? cjkSizeRatio + 1 : 1)), Math.round(PIXEL_RESOLUTION * (cjkSizeRatio < 0 ? 1 - cjkSizeRatio : 1)), 0, HorizontalAlignment.CENTER);
 			final int width = Math.min(newMaxWidth, dimensions[0]) * scale;
 			final int height = dimensions[1] * scale;
 

@@ -2,7 +2,6 @@ package mtr.model;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Vector3f;
 import mtr.client.ClientData;
 import mtr.client.DoorAnimationType;
 import mtr.client.ScrollingText;
@@ -10,6 +9,7 @@ import mtr.data.Route;
 import mtr.data.Station;
 import mtr.mappings.ModelDataWrapper;
 import mtr.mappings.ModelMapper;
+import mtr.mappings.UtilitiesClient;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 
@@ -1973,7 +1973,7 @@ public class ModelClass802 extends ModelSimpleTrainBase<ModelClass802> {
 		final String destinationString = getDestinationString(lastStation, customDestination, TextSpacingType.NORMAL, false);
 
 		if (renderFirstDestination || renderSecondDestination) {
-			scrollingTexts.get(0).changeImage(destinationString.isEmpty() ? null : ClientData.DATA_CACHE.getPixelatedText(destinationString.replace("|", " "), 0xFFFF9900, Integer.MAX_VALUE, false));
+			scrollingTexts.get(0).changeImage(destinationString.isEmpty() ? null : ClientData.DATA_CACHE.getPixelatedText(destinationString.replace("|", " "), 0xFFFF9900, Integer.MAX_VALUE, 0, false));
 			scrollingTexts.get(0).setVertexConsumer(vertexConsumers);
 
 			for (int i = 0; i < 2; i++) {
@@ -1982,8 +1982,8 @@ public class ModelClass802 extends ModelSimpleTrainBase<ModelClass802> {
 						final int flip = j == 1 ? -1 : 1;
 						matrices.pushPose();
 						matrices.translate(-21F / 16 * flip, -13F / 16, getEndPositions()[i] / 16F + (i == 0 ? 1 : -1) * (1.28F + (i == 0 && isEnd1Head || i == 1 && isEnd2Head ? 5.63F : 0)));
-						matrices.mulPose(Vector3f.YP.rotationDegrees(90 * flip));
-						matrices.mulPose(Vector3f.XP.rotationDegrees(-8));
+						UtilitiesClient.rotateYDegrees(matrices, 90 * flip);
+						UtilitiesClient.rotateXDegrees(matrices, -8);
 						matrices.translate(-0.23F, -1.38F, -0.01F);
 						scrollingTexts.get(0).scrollText(matrices);
 						matrices.popPose();
@@ -1993,13 +1993,13 @@ public class ModelClass802 extends ModelSimpleTrainBase<ModelClass802> {
 		}
 
 		final String nextStationString = getLondonNextStationString(thisRoute, nextRoute, thisStation, nextStation, lastStation, destinationString, atPlatform);
-		scrollingTexts.get(1).changeImage(nextStationString.isEmpty() ? null : ClientData.DATA_CACHE.getPixelatedText(nextStationString, 0xFFFF9900, Integer.MAX_VALUE, true));
+		scrollingTexts.get(1).changeImage(nextStationString.isEmpty() ? null : ClientData.DATA_CACHE.getPixelatedText(nextStationString, 0xFFFF9900, Integer.MAX_VALUE, 0, true));
 		scrollingTexts.get(1).setVertexConsumer(vertexConsumers);
 
 		for (int i = 0; i < 2; i++) {
 			matrices.pushPose();
 			if (i == 1) {
-				matrices.mulPose(Vector3f.YP.rotationDegrees(180));
+				UtilitiesClient.rotateYDegrees(matrices, 180);
 			}
 			matrices.translate(-0.35F, -2.19F, (getEndPositions()[1] - (i == 1 && isEnd1Head || i == 0 && isEnd2Head ? 90 : 0)) / 16F - 0.51F);
 			scrollingTexts.get(1).scrollText(matrices);

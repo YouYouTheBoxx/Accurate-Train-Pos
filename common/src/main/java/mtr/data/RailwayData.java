@@ -18,6 +18,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.GameType;
@@ -733,6 +734,22 @@ public class RailwayData extends PersistentStateMapper implements IPacket {
 
 	public static String prettyPrint(JsonElement jsonElement) {
 		return new GsonBuilder().setPrettyPrinting().create().toJson(jsonElement);
+	}
+
+	public static BlockPos newBlockPos(Vec3 vec3) {
+		return newBlockPos(vec3.x, vec3.y, vec3.z);
+	}
+
+	public static BlockPos newBlockPos(double x, double y, double z) {
+		return RailwayData.newBlockPos(Mth.floor(x), Mth.floor(y), Mth.floor(z));
+	}
+
+	public static BlockPos newBlockPos(int x, int y, int z) {
+		return new BlockPos(x, y, z);
+	}
+
+	public static BlockPos offsetBlockPos(BlockPos pos, double x, double y, double z) {
+		return x == 0 && y == 0 && z == 0 ? pos : newBlockPos(pos.getX() + x, pos.getY() + y, pos.getZ() + z);
 	}
 
 	public static RailwayData getInstance(Level world) {

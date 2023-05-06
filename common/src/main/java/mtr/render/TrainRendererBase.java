@@ -1,9 +1,9 @@
 package mtr.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
 import mtr.MTRClient;
 import mtr.client.Config;
+import mtr.data.RailwayData;
 import mtr.data.TrainClient;
 import mtr.entity.EntitySeat;
 import mtr.mappings.Utilities;
@@ -88,7 +88,7 @@ public abstract class TrainRendererBase {
 	public static BlockPos applyAverageTransform(Vec3 viewOffset, double x, double y, double z) {
 		final boolean noOffset = viewOffset == null;
 		final Vec3 cameraPos = cameraEntity == null ? null : cameraEntity.position();
-		final BlockPos posAverage = new BlockPos(x + (noOffset || cameraPos == null ? 0 : cameraPos.x), y + (noOffset || cameraPos == null ? 0 : cameraPos.y), z + (noOffset || cameraPos == null ? 0 : cameraPos.z));
+		final BlockPos posAverage = RailwayData.newBlockPos(x + (noOffset || cameraPos == null ? 0 : cameraPos.x), y + (noOffset || cameraPos == null ? 0 : cameraPos.y), z + (noOffset || cameraPos == null ? 0 : cameraPos.z));
 
 		if (RenderTrains.shouldNotRender(posAverage, UtilitiesClient.getRenderDistance() * (Config.trainRenderDistanceRatio() + 1), null)) {
 			return null;
@@ -111,7 +111,7 @@ public abstract class TrainRendererBase {
 			}
 			final float cameraYaw = camera.getYRot();
 			matrices.translate(offsetX, offsetY, offsetZ);
-			matrices.mulPose(Vector3f.YP.rotationDegrees(Utilities.getYaw(player) - cameraYaw + (Math.abs(Utilities.getYaw(player) - cameraYaw) > 90 ? 180 : 0)));
+			UtilitiesClient.rotateYDegrees(matrices, Utilities.getYaw(player) - cameraYaw + (Math.abs(Utilities.getYaw(player) - cameraYaw) > 90 ? 180 : 0));
 			matrices.translate(-viewOffset.x, -viewOffset.y, -viewOffset.z);
 		}
 

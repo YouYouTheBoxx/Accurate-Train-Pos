@@ -10,10 +10,10 @@ import mtr.data.*;
 import mtr.mappings.SelectableMapper;
 import mtr.mappings.Text;
 import mtr.mappings.UtilitiesClient;
+import mtr.mappings.WidgetMapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -30,7 +30,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 
-public class WidgetMap implements Widget, SelectableMapper, GuiEventListener, IGui {
+public class WidgetMap implements WidgetMapper, SelectableMapper, GuiEventListener, IGui {
 
 	private int x;
 	private int y;
@@ -93,7 +93,7 @@ public class WidgetMap implements Widget, SelectableMapper, GuiEventListener, IG
 		for (int i = topLeft.getA(); i <= bottomRight.getA(); i += increment) {
 			for (int j = topLeft.getB(); j <= bottomRight.getB(); j += increment) {
 				if (world != null) {
-					final int color = divideColorRGB(world.getBlockState(new BlockPos(i, world.getHeight(Heightmap.Types.MOTION_BLOCKING, i, j) - 1, j)).getBlock().defaultMaterialColor().col, 2);
+					final int color = divideColorRGB(world.getBlockState(RailwayData.newBlockPos(i, world.getHeight(Heightmap.Types.MOTION_BLOCKING, i, j) - 1, j)).getBlock().defaultMaterialColor().col, 2);
 					drawRectangleFromWorldCoords(buffer, i, j, i + increment, j + increment, ARGB_BLACK | color);
 				}
 			}
@@ -245,6 +245,13 @@ public class WidgetMap implements Widget, SelectableMapper, GuiEventListener, IG
 	@Override
 	public boolean isMouseOver(double mouseX, double mouseY) {
 		return mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height && !(mouseX >= x + width - SQUARE_SIZE * 10 && mouseY >= y + height - SQUARE_SIZE) && !isRestrictedMouseArea.apply(mouseX, mouseY);
+	}
+
+	public void setFocused(boolean focused) {
+	}
+
+	public boolean isFocused() {
+		return false;
 	}
 
 	public void setPositionAndSize(int x, int y, int width, int height) {

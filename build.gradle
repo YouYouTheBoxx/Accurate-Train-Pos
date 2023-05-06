@@ -12,15 +12,16 @@ plugins {
 def default_minecraft_version = "1.16.5"
 def minecraft_version = rootProject.properties.containsKey("buildVersion") ? rootProject.getProperties().get("buildVersion").toString() : default_minecraft_version
 def minecraft_main_version = minecraft_version.split("\\.")[1] as int
-def minecraft_mod_api_tools_version = new JsonSlurper().parse(("https://api.github.com/repos/jonafanho/Minecraft-Mod-API-Tools/git/refs/heads/master").toURL())["object"]["sha"]
 def patreon_api_key = rootProject.properties.containsKey("patreonApiKey") ? rootProject.getProperties().get("patreonApiKey").toString() : ""
-def parchment_version = new XmlSlurper().parse("https://ldtteam.jfrog.io/artifactory/parchmentmc-internal/org/parchmentmc/data/parchment-${minecraft_version}/maven-metadata.xml").versioning.release
+def is_1_19_3 = minecraft_version == "1.19.3" || minecraft_version == "1.19.4"
+def parchment_version = getXml("https://ldtteam.jfrog.io/artifactory/parchmentmc-internal/org/parchmentmc/data/parchment-${is_1_19_3 ? "1.19.3" : minecraft_version}/maven-metadata.xml").versioning.release
+def testServer = rootProject.properties.containsKey("testServer") ? rootProject.getProperties().get("testServer").toString() : ""
 
-rootProject.ext.fabric_loader_version = new JsonSlurper().parse(("https://meta.fabricmc.net/v2/versions/loader/" + minecraft_version).toURL())[0]["loader"]["version"]
-rootProject.ext.forge_version = minecraft_version + "-" + new JsonSlurper().parse(("https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json").toURL())["promos"][minecraft_version + "-latest"]
-rootProject.ext.fabric_api_version = getModrinthVersion("fabric", minecraft_version, "fabric-api")
-rootProject.ext.mod_menu_version = getModrinthVersion("fabric", minecraft_version, "modmenu")
-rootProject.ext.architectury_version = getModrinthVersion("forge", minecraft_version, "architectury-api").split("\\+")[0]
+rootProject.ext.fabric_loader_version = [minecraft_version, getJson("https://meta.fabricmc.net/v2/versions/loader/" + minecraft_version)[0]["loader"]["version"]]
+rootProject.ext.forge_version = minecraft_version + "-" + getJson("https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json")["promos"][minecraft_version + "-latest"]
+rootProject.ext.fabric_api_data = getModrinthData("fabric", minecraft_version, "fabric-api")
+rootProject.ext.mod_menu_data = getModrinthData("fabric", minecraft_version, "modmenu")
+rootProject.ext.architectury_data = getModrinthData("forge", minecraft_version, "architectury-api")
 
 rootProject.ext.architectury_id = minecraft_main_version == 16 ? "me.shedaniel" : "dev.architectury"
 rootProject.ext.variation = rootProject.properties.containsKey("variation") ? rootProject.getProperties().get("variation").toString() : "normal"
@@ -50,44 +51,44 @@ subprojects {
 		minecraft "com.mojang:minecraft:${minecraft_version}"
 		mappings loom.layered() {
 			officialMojangMappings()
-			parchment("org.parchmentmc.data:parchment-${minecraft_version}:${parchment_version}@zip")
+			parchment("org.parchmentmc.data:parchment-${is_1_19_3 ? "1.19.3" : minecraft_version}:${parchment_version}@zip")
 		}
 		implementation name: "Dynmap-3.2.1"
 		implementation name: "BlueMapAPI-2.1.1"
-		implementation "xyz.jpenilla:squaremap-api:${rootProject.squaremap_version}"
-		implementation "org.eclipse.jetty:jetty-http:${rootProject.jetty_version}"
-		implementation "org.eclipse.jetty:jetty-io:${rootProject.jetty_version}"
-		implementation "org.eclipse.jetty:jetty-security:${rootProject.jetty_version}"
-		implementation "org.eclipse.jetty:jetty-server:${rootProject.jetty_version}"
-		implementation "org.eclipse.jetty:jetty-servlet:${rootProject.jetty_version}"
-		implementation "org.eclipse.jetty:jetty-util:${rootProject.jetty_version}"
-		implementation "org.eclipse.jetty:jetty-util-ajax:${rootProject.jetty_version}"
-		implementation "javax.servlet:javax.servlet-api:${rootProject.servlet_api_version}"
-		implementation "org.msgpack:msgpack-core:${rootProject.messagepack_version}"
-		implementation "com.hierynomus:sshj:${rootProject.sshj_version}"
-		implementation "com.github.jonafanho:Minecraft-Mod-API-Tools:${minecraft_mod_api_tools_version}"
-		shadowCommon "org.eclipse.jetty:jetty-http:${rootProject.jetty_version}"
-		shadowCommon "org.eclipse.jetty:jetty-io:${rootProject.jetty_version}"
-		shadowCommon "org.eclipse.jetty:jetty-security:${rootProject.jetty_version}"
-		shadowCommon "org.eclipse.jetty:jetty-server:${rootProject.jetty_version}"
-		shadowCommon "org.eclipse.jetty:jetty-servlet:${rootProject.jetty_version}"
-		shadowCommon "org.eclipse.jetty:jetty-util:${rootProject.jetty_version}"
-		shadowCommon "org.eclipse.jetty:jetty-util-ajax:${rootProject.jetty_version}"
-		shadowCommon "javax.servlet:javax.servlet-api:${rootProject.servlet_api_version}"
-		shadowCommon "org.msgpack:msgpack-core:${rootProject.messagepack_version}"
+		implementation "xyz.jpenilla:squaremap-api:+"
+		implementation "org.eclipse.jetty:jetty-http:9.+"
+		implementation "org.eclipse.jetty:jetty-io:9.+"
+		implementation "org.eclipse.jetty:jetty-security:9.+"
+		implementation "org.eclipse.jetty:jetty-server:9.+"
+		implementation "org.eclipse.jetty:jetty-servlet:9.+"
+		implementation "org.eclipse.jetty:jetty-util:9.+"
+		implementation "org.eclipse.jetty:jetty-util-ajax:9.+"
+		implementation "javax.servlet:javax.servlet-api:+"
+		implementation "org.msgpack:msgpack-core:+"
+		implementation "com.hierynomus:sshj:+"
+		implementation "com.github.jonafanho:Minecraft-Mod-API-Tools:${rootProject.minecraft_mod_api_tools_version}"
+		shadowCommon "org.eclipse.jetty:jetty-http:9.+"
+		shadowCommon "org.eclipse.jetty:jetty-io:9.+"
+		shadowCommon "org.eclipse.jetty:jetty-security:9.+"
+		shadowCommon "org.eclipse.jetty:jetty-server:9.+"
+		shadowCommon "org.eclipse.jetty:jetty-servlet:9.+"
+		shadowCommon "org.eclipse.jetty:jetty-util:9.+"
+		shadowCommon "org.eclipse.jetty:jetty-util-ajax:9.+"
+		shadowCommon "javax.servlet:javax.servlet-api:+"
+		shadowCommon "org.msgpack:msgpack-core:+"
 	}
 }
 
 task setupFiles() {
-	System.out.println("Fabric Loader: " + rootProject.fabric_loader_version)
+	System.out.println("Fabric Loader: " + rootProject.fabric_loader_version[1])
 	System.out.println("Forge: " + rootProject.forge_version)
-	System.out.println("Fabric API: " + rootProject.fabric_api_version)
-	System.out.println("Mod Menu: " + rootProject.mod_menu_version)
-	System.out.println("Architectury: " + rootProject.architectury_version)
+	System.out.println("Fabric API: " + rootProject.fabric_api_data[0])
+	System.out.println("Mod Menu: " + rootProject.mod_menu_data[0])
+	System.out.println("Architectury: " + rootProject.architectury_data[0].split("\\+")[0])
 	System.out.println("Parchment: " + parchment_version)
 
 	download {
-		src "https://github.com/jonafanho/Minecraft-Mappings/archive/refs/heads/1.${minecraft_main_version}.zip"
+		src "https://github.com/jonafanho/Minecraft-Mappings/archive/refs/heads/${is_1_19_3 ? minecraft_version : "1." + minecraft_main_version}.zip"
 		dest "common/src/main/java/mtr/mappings/mappings.zip"
 		overwrite true
 		retries - 1
@@ -176,7 +177,7 @@ task setupFiles() {
 		outputs.upToDateWhen { false }
 		from "common/src/main/KeysTemplate.java"
 		into "common/src/main/java/mtr"
-		filter(ReplaceTokens, tokens: ["key": patreon_api_key, "version": minecraft_version + "-" + rootProject.mod_version, "lifts": rootProject.variation])
+		filter(ReplaceTokens, tokens: ["key": patreon_api_key, "version": minecraft_version + "-" + rootProject.mod_version, "lifts": rootProject.variation, "server": testServer])
 		rename "(.+)Template.java", "\$1.java"
 	}
 	copy {
@@ -197,6 +198,13 @@ task setupFiles() {
 		from "fabric/src/main/UnknownPacketMixinTemplate.java"
 		into "fabric/src/main/java/mtr/mixin"
 		filter(ReplaceTokens, tokens: ["path1": minecraft_main_version <= 17 || minecraft_version == "1.18" ? "apache/logging/log4j" : "slf4j", "path2": minecraft_main_version <= 17 || minecraft_version == "1.18" ? "apache.logging.log4j" : "slf4j"])
+		rename "(.+)Template.java", "\$1.java"
+	}
+	copy {
+		outputs.upToDateWhen { false }
+		from "forge/src/main/LevelRendererMixinTemplate.java"
+		into "forge/src/main/java/mtr/mixin"
+		filter(ReplaceTokens, tokens: ["path": is_1_19_3 ? "org.joml" : "com.mojang.math"])
 		rename "(.+)Template.java", "\$1.java"
 	}
 
@@ -256,12 +264,41 @@ allprojects {
 	}
 }
 
-static def getModrinthVersion(loader, minecraftVersion, projectId) {
-	def versionsArray = new JsonSlurper().parse(("https://api.modrinth.com/v2/project/" + projectId + "/version").toURL())
+static String[] getModrinthData(String loader, String minecraftVersion, String projectId) {
+	def versionsArray = getJson("https://api.modrinth.com/v2/project/" + projectId + "/version")
 	for (def versionElement : versionsArray) {
 		if (versionElement["loaders"].contains(loader) && versionElement["game_versions"].contains(minecraftVersion)) {
-			return versionElement["version_number"]
+			return [versionElement["version_number"], versionElement["files"][0]["url"]]
 		}
 	}
-	return ""
+	return ["", ""]
+}
+
+static Object getJson(String url) {
+	int tries = 0
+	while (true) {
+		try {
+			if (tries > 1) {
+				System.out.println("Parsed ${url} after ${tries} tries")
+			}
+			return new JsonSlurper().parse(url.toURL())
+		} catch (Exception ignored) {
+			Thread.sleep(1000)
+		}
+	}
+}
+
+static Object getXml(String url) {
+	int tries = 0
+	while (true) {
+		try {
+			if (tries > 1) {
+				System.out.println("Parsed ${url} after ${tries} tries")
+			}
+			return new XmlSlurper().parse(url)
+		} catch (Exception ignored) {
+			Thread.sleep(1000)
+			tries++
+		}
+	}
 }

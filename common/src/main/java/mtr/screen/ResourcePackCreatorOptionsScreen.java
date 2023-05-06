@@ -48,22 +48,22 @@ public class ResourcePackCreatorOptionsScreen extends ScreenMapper implements IR
 		super(Text.literal(""));
 		this.resourcePackCreatorScreen = resourcePackCreatorScreen;
 
-		buttonChooseModelFile = new Button(0, 0, 0, SQUARE_SIZE, Text.literal(""), button -> buttonCallback(path -> {
+		buttonChooseModelFile = UtilitiesClient.newButton(button -> buttonCallback(path -> {
 			RenderTrains.creatorProperties.loadModelFile(path);
 			updateControls(false);
 		}));
-		buttonChoosePropertiesFile = new Button(0, 0, 0, SQUARE_SIZE, Text.literal(""), button -> buttonCallback(path -> {
+		buttonChoosePropertiesFile = UtilitiesClient.newButton(button -> buttonCallback(path -> {
 			RenderTrains.creatorProperties.loadPropertiesFile(path);
 			updateControls(false);
 		}));
-		buttonChooseTextureFile = new Button(0, 0, 0, SQUARE_SIZE, Text.literal(""), button -> buttonCallback(path -> {
+		buttonChooseTextureFile = UtilitiesClient.newButton(button -> buttonCallback(path -> {
 			RenderTrains.creatorProperties.loadTextureFile(path);
 			updateControls(false);
 		}));
 
 		textFieldId = new WidgetBetterTextField("my_custom_train_id");
 		textFieldName = new WidgetBetterTextField("My Custom Train Name");
-		colorSelector = new WidgetColorSelector(this, this::onUpdateColor);
+		colorSelector = new WidgetColorSelector(this, true, this::onUpdateColor);
 		textFieldGangwayConnectionId = new WidgetBetterTextField("mtr:textures/entity/sp1900");
 		textFieldTrainBarrierId = new WidgetBetterTextField("mtr:textures/entity/r211");
 		sliderRiderOffset = new WidgetShorterSlider(0, PANEL_WIDTH, 18, value -> {
@@ -72,8 +72,8 @@ public class ResourcePackCreatorOptionsScreen extends ScreenMapper implements IR
 			return Text.translatable("gui.mtr.custom_resources_rider_offset", (value - 2) / 4F).getString();
 		}, null);
 
-		buttonDone = new Button(0, 0, 0, SQUARE_SIZE, Text.translatable("gui.done"), button -> onClose());
-		buttonExport = new Button(0, 0, 0, SQUARE_SIZE, Text.translatable("gui.mtr.custom_resources_export_resource_pack"), button -> RenderTrains.creatorProperties.export());
+		buttonDone = UtilitiesClient.newButton(Text.translatable("gui.done"), button -> onClose());
+		buttonExport = UtilitiesClient.newButton(Text.translatable("gui.mtr.custom_resources_export_resource_pack"), button -> RenderTrains.creatorProperties.export());
 	}
 
 	@Override

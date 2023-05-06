@@ -2,7 +2,6 @@ package mtr.model;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Vector3f;
 import mtr.client.ClientData;
 import mtr.client.DoorAnimationType;
 import mtr.client.ScrollingText;
@@ -10,6 +9,7 @@ import mtr.data.Route;
 import mtr.data.Station;
 import mtr.mappings.ModelDataWrapper;
 import mtr.mappings.ModelMapper;
+import mtr.mappings.UtilitiesClient;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 
@@ -1297,13 +1297,13 @@ public class ModelLondonUndergroundD78 extends ModelSimpleTrainBase<ModelLondonU
 		final boolean isEnd1Head = car == 0;
 		final boolean isEnd2Head = car == totalCars - 1;
 		final String nextStationString = getLondonNextStationString(thisRoute, nextRoute, thisStation, nextStation, lastStation, destinationString, atPlatform);
-		scrollingTexts.get(0).changeImage(nextStationString.isEmpty() ? null : ClientData.DATA_CACHE.getPixelatedText(nextStationString, 0xFFFF9900, Integer.MAX_VALUE, true));
+		scrollingTexts.get(0).changeImage(nextStationString.isEmpty() ? null : ClientData.DATA_CACHE.getPixelatedText(nextStationString, 0xFFFF9900, Integer.MAX_VALUE, 0, true));
 		scrollingTexts.get(0).setVertexConsumer(vertexConsumers);
 
 		for (int i = 0; i < 2; i++) {
 			matrices.pushPose();
 			if (i == 1) {
-				matrices.mulPose(Vector3f.YP.rotationDegrees(180));
+				UtilitiesClient.rotateYDegrees(matrices, 180);
 			}
 			matrices.translate(-0.36F, -2.32F, (getEndPositions()[1] + 11 - (i == 1 && isEnd1Head || i == 0 && isEnd2Head ? 16 : 0)) / 16F - 0.01);
 			scrollingTexts.get(0).scrollText(matrices);

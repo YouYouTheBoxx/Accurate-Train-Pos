@@ -10,6 +10,7 @@ import mtr.client.TrainClientRegistry;
 import mtr.client.TrainProperties;
 import mtr.data.*;
 import mtr.mappings.Text;
+import mtr.mappings.UtilitiesClient;
 import mtr.packet.IPacket;
 import mtr.packet.PacketTrainDataGuiClient;
 import net.minecraft.client.gui.components.Button;
@@ -57,7 +58,7 @@ public class SidingScreen extends SavedRailScreenBase<Siding> implements Icons {
 	public SidingScreen(Siding siding, TransportMode transportMode, DashboardScreen dashboardScreen) {
 		super(siding, transportMode, dashboardScreen, SELECTED_TRAIN_TEXT, MAX_TRAINS_TEXT, ACCELERATION_CONSTANT_TEXT, MANUAL_TO_AUTOMATIC_TIME, MAX_MANUAL_SPEED);
 		this.transportMode = transportMode;
-		buttonSelectTrain = new Button(0, 0, 0, SQUARE_SIZE, Text.literal(""), button -> onSelectingTrain());
+		buttonSelectTrain = UtilitiesClient.newButton(button -> onSelectingTrain());
 		availableTrainsList = new DashboardList(null, null, null, null, this::onAdd, null, null, () -> ClientData.TRAINS_SEARCH, text -> ClientData.TRAINS_SEARCH = text);
 		textFieldMaxTrains = new WidgetBetterTextField(WidgetBetterTextField.TextFieldFilter.POSITIVE_INTEGER, "", MAX_TRAINS_TEXT_LENGTH);
 		sliderAccelerationConstant = new WidgetShorterSlider(0, MAX_TRAINS_WIDTH, Math.round((Train.MAX_ACCELERATION - Train.MIN_ACCELERATION) * SLIDER_SCALE), this::accelerationSliderFormatter, null);
@@ -112,20 +113,20 @@ public class SidingScreen extends SavedRailScreenBase<Siding> implements Icons {
 			setIsSelectingTrain(false);
 		});
 
-		sliderAccelerationConstant.x = SQUARE_SIZE + textWidth;
-		sliderAccelerationConstant.y = SQUARE_SIZE * 4 + TEXT_FIELD_PADDING * 2;
+		UtilitiesClient.setWidgetX(sliderAccelerationConstant, SQUARE_SIZE + textWidth);
+		UtilitiesClient.setWidgetY(sliderAccelerationConstant, SQUARE_SIZE * 4 + TEXT_FIELD_PADDING * 2);
 		sliderAccelerationConstant.setHeight(SQUARE_SIZE);
 		sliderAccelerationConstant.setValue(Math.round((savedRailBase.getAccelerationConstant() - Train.MIN_ACCELERATION) * SLIDER_SCALE));
 
 		IDrawing.setPositionAndWidth(buttonIsManual, SQUARE_SIZE, SQUARE_SIZE * 6 + TEXT_FIELD_PADDING * 2, width - textWidth - SQUARE_SIZE * 2);
 
-		sliderMaxManualSpeed.x = SQUARE_SIZE + textWidth;
-		sliderMaxManualSpeed.y = SQUARE_SIZE * 7 + TEXT_FIELD_PADDING * 2;
+		UtilitiesClient.setWidgetX(sliderMaxManualSpeed, SQUARE_SIZE + textWidth);
+		UtilitiesClient.setWidgetY(sliderMaxManualSpeed, SQUARE_SIZE * 7 + TEXT_FIELD_PADDING * 2);
 		sliderMaxManualSpeed.setHeight(SQUARE_SIZE);
 		sliderMaxManualSpeed.setValue(savedRailBase.getMaxManualSpeed());
 
-		sliderDwellTimeMin.y = SQUARE_SIZE * 8 + TEXT_FIELD_PADDING * 2;
-		sliderDwellTimeSec.y = SQUARE_SIZE * 17 / 2 + TEXT_FIELD_PADDING * 2;
+		UtilitiesClient.setWidgetY(sliderDwellTimeMin, SQUARE_SIZE * 8 + TEXT_FIELD_PADDING * 2);
+		UtilitiesClient.setWidgetY(sliderDwellTimeSec, SQUARE_SIZE * 17 / 2 + TEXT_FIELD_PADDING * 2);
 
 		setIsSelectingTrain(false);
 
@@ -238,12 +239,16 @@ public class SidingScreen extends SavedRailScreenBase<Siding> implements Icons {
 	}
 
 	private void onSelectingTrain() {
-		final List<DataConverter> trainList = new ArrayList<>();
+		final List<TrainForList> trainsForListTemp = new ArrayList<>();
+		final List<TrainForList> trainsForListUnavailable = new ArrayList<>();
+
 		TrainClientRegistry.forEach(transportMode, (id, trainProperties) -> {
-			final boolean isAvailable = savedRailBase.isValidVehicle(TrainType.getSpacing(trainProperties.baseTrainType));
-			trainList.add(new DataConverter((isAvailable ? trainProperties.name.getString() : WARNING + " " + trainProperties.name.getString()), isAvailable ? trainProperties.color : 0));
+			final TrainForList trainForList = new TrainForList(savedRailBase, id, trainProperties);
+			(trainForList.isAvailable ? trainsForListTemp : trainsForListUnavailable).add(trainForList);
 		});
-		availableTrainsList.setData(trainList, false, false, false, false, true, false);
+
+		trainsForListTemp.addAll(trainsForListUnavailable);
+		availableTrainsList.setData(trainsForListTemp, false, false, false, false, true, false);
 		setIsSelectingTrain(true);
 	}
 
@@ -262,10 +267,12 @@ public class SidingScreen extends SavedRailScreenBase<Siding> implements Icons {
 	}
 
 	private void onAdd(NameColorDataBase data, int index) {
-		final String baseTrainType = TrainClientRegistry.getTrainProperties(transportMode, index).baseTrainType;
-		if (savedRailBase.isValidVehicle(TrainType.getSpacing(baseTrainType))) {
-			savedRailBase.setTrainIdAndBaseType(TrainClientRegistry.getTrainId(transportMode, index), baseTrainType, packet -> PacketTrainDataGuiClient.sendUpdate(IPacket.PACKET_UPDATE_SIDING, packet));
-			setIsSelectingTrain(false);
+		if (data instanceof TrainForList) {
+			final String baseTrainType = ((TrainForList) data).trainProperties.baseTrainType;
+			if (savedRailBase.isValidVehicle(TrainType.getSpacing(baseTrainType))) {
+				savedRailBase.setTrainIdAndBaseType(((TrainForList) data).trainId, baseTrainType, packet -> PacketTrainDataGuiClient.sendUpdate(IPacket.PACKET_UPDATE_SIDING, packet));
+				setIsSelectingTrain(false);
+			}
 		}
 	}
 
@@ -306,6 +313,26 @@ public class SidingScreen extends SavedRailScreenBase<Siding> implements Icons {
 			return "";
 		} else {
 			return result;
+		}
+	}
+
+	private static class TrainForList extends NameColorDataBase {
+
+		private final String trainId;
+		private final TrainProperties trainProperties;
+		private final boolean isAvailable;
+
+		private TrainForList(Siding savedRailBase, String trainId, TrainProperties trainProperties) {
+			this.trainId = trainId;
+			this.trainProperties = trainProperties;
+			isAvailable = savedRailBase.isValidVehicle(TrainType.getSpacing(trainProperties.baseTrainType));
+			this.name = (isAvailable ? "" : WARNING + " ") + trainProperties.name.getString();
+			this.color = isAvailable ? trainProperties.color : 0;
+		}
+
+		@Override
+		protected boolean hasTransportMode() {
+			return false;
 		}
 	}
 }

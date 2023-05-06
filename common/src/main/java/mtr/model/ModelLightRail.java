@@ -2,12 +2,12 @@ package mtr.model;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Vector3f;
 import mtr.client.*;
 import mtr.data.Route;
 import mtr.data.Station;
 import mtr.mappings.ModelDataWrapper;
 import mtr.mappings.ModelMapper;
+import mtr.mappings.UtilitiesClient;
 import mtr.render.MoreRenderLayers;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -899,6 +899,7 @@ public class ModelLightRail extends ModelSimpleTrainBase<ModelLightRail> {
 						break;
 					case 3:
 					case 5:
+					case 7:
 						renderOnce(head_exterior_3_5, matrices, vertices, light, position);
 						break;
 					case 4:
@@ -965,6 +966,7 @@ public class ModelLightRail extends ModelSimpleTrainBase<ModelLightRail> {
 			case 2:
 				return isRHT ? MODEL_DOOR_OVERLAY_RHT : MODEL_DOOR_OVERLAY;
 			case 3:
+			case 7:
 				return isRHT ? MODEL_DOOR_OVERLAY_3_RHT : MODEL_DOOR_OVERLAY_3;
 			case 4:
 			case 6:
@@ -1008,8 +1010,8 @@ public class ModelLightRail extends ModelSimpleTrainBase<ModelLightRail> {
 	@Override
 	protected void renderTextDisplays(PoseStack matrices, MultiBufferSource vertexConsumers, Font font, MultiBufferSource.BufferSource immediate, Route thisRoute, Route nextRoute, Station thisStation, Station nextStation, Station lastStation, String customDestination, int car, int totalCars, boolean atPlatform, List<ScrollingText> scrollingTexts) {
 		final String routeNumber = thisRoute == null ? "" : thisRoute.lightRailRouteNumber;
-		final float frontOffset = phase == 3 || phase == 5 ? 2.75F : phase == 4 || phase == 6 ? 3.02F : 2.87F;
-		final int color = phase == 3 ? 0xFF00FF00 : 0xFFFF9900;
+		final float frontOffset = phase == 3 || phase == 5 || phase == 7 ? 2.75F : phase == 4 || phase == 6 ? 3.02F : 2.87F;
+		final int color = phase == 3 || phase == 7 ? 0xFFA4FE07 : 0xFFFF9900;
 
 		renderFrontDestination(
 				matrices, font, immediate,
@@ -1056,10 +1058,10 @@ public class ModelLightRail extends ModelSimpleTrainBase<ModelLightRail> {
 		final Station station = atPlatform ? thisStation : nextStation;
 		if (station != null) {
 			final String stationString = getDestinationString(station, null, TextSpacingType.SPACE_CJK_LARGE, true);
-			final ClientCache.DynamicResource dynamicResource = ClientData.DATA_CACHE.getPixelatedText(stationString, 0xFFFF9900, 300, true);
+			final ClientCache.DynamicResource dynamicResource = ClientData.DATA_CACHE.getPixelatedText(stationString, 0xFFFF9900, 300, 0, true);
 			final VertexConsumer vertexConsumer = vertexConsumers.getBuffer(MoreRenderLayers.getLight(dynamicResource.resourceLocation, true));
 			matrices.pushPose();
-			matrices.mulPose(Vector3f.YP.rotationDegrees(180));
+			UtilitiesClient.rotateYDegrees(matrices, 180);
 			matrices.translate(-0.35F, -2.2F, 8.99F);
 			RouteMapGenerator.scrollTextLightRail(matrices, vertexConsumer, stationString.split("\\|").length, 0.7F, 0.07F, dynamicResource.width, dynamicResource.height);
 			matrices.popPose();

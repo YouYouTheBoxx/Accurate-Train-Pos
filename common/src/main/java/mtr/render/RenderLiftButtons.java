@@ -2,16 +2,17 @@ package mtr.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Vector3f;
 import mtr.block.BlockLiftButtons;
 import mtr.block.IBlock;
 import mtr.client.ClientData;
 import mtr.client.IDrawing;
 import mtr.data.IGui;
 import mtr.data.Lift;
+import mtr.data.RailwayData;
 import mtr.item.ItemLiftButtonsLinkModifier;
 import mtr.mappings.BlockEntityRendererMapper;
 import mtr.mappings.Utilities;
+import mtr.mappings.UtilitiesClient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
@@ -78,7 +79,7 @@ public class RenderLiftButtons extends BlockEntityRendererMapper<BlockLiftButton
 						buttonStates[3] = true;
 					}
 
-					final BlockPos liftPos = new BlockPos(lift.getPositionX(), 0, lift.getPositionZ());
+					final BlockPos liftPos = RailwayData.newBlockPos(lift.getPositionX(), 0, lift.getPositionZ());
 					liftPositions.add(liftPos);
 					liftDisplays.put(liftPos, new Tuple<>(ClientData.DATA_CACHE.requestLiftFloorText(lift.getCurrentFloorBlockPos())[0], lift.getLiftDirection()));
 				}
@@ -97,12 +98,12 @@ public class RenderLiftButtons extends BlockEntityRendererMapper<BlockLiftButton
 			final double hitX = hitLocation.x - Math.floor(hitLocation.x);
 			final double hitY = hitLocation.y - Math.floor(hitLocation.y);
 			final double hitZ = hitLocation.z - Math.floor(hitLocation.z);
-			final boolean inBlock = hitX > 0 && hitY > 0 && hitZ > 0 && new BlockPos(hitLocation).equals(pos);
+			final boolean inBlock = hitX > 0 && hitY > 0 && hitZ > 0 && RailwayData.newBlockPos(hitLocation).equals(pos);
 			lookingAtTopHalf = inBlock && (!buttonStates[1] || hitY > 0.25 && hitY < 0.5);
 			lookingAtBottomHalf = inBlock && (!buttonStates[0] || hitY < 0.25);
 		}
 
-		matrices.mulPose(Vector3f.YN.rotationDegrees(facing.toYRot()));
+		UtilitiesClient.rotateYDegrees(matrices, -facing.toYRot());
 		matrices.translate(0, 0, 0.4375 - SMALL_OFFSET);
 
 		if (buttonStates[0]) {
@@ -115,7 +116,7 @@ public class RenderLiftButtons extends BlockEntityRendererMapper<BlockLiftButton
 		}
 
 		final float maxWidth = Math.min(0.25F, 0.375F / liftPositions.size());
-		matrices.mulPose(Vector3f.ZP.rotationDegrees(180));
+		UtilitiesClient.rotateZDegrees(matrices, 180);
 		matrices.translate(maxWidth * (0.5 - liftPositions.size() / 2F), 0, 0);
 		IDrawing.drawTexture(matrices, vertexConsumers.getBuffer(MoreRenderLayers.getExterior(new ResourceLocation("mtr:textures/block/black.png"))), -maxWidth / 2, -0.9375F, maxWidth * liftPositions.size(), 0.40625F, Direction.UP, light);
 		matrices.translate(0, -0.875, -SMALL_OFFSET);

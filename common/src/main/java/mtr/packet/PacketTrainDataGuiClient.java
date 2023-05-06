@@ -10,6 +10,7 @@ import mtr.block.BlockTrainSensorBase;
 import mtr.client.ClientData;
 import mtr.client.IDrawing;
 import mtr.data.*;
+import mtr.mappings.RegistryUtilities;
 import mtr.mappings.Text;
 import mtr.mappings.UtilitiesClient;
 import mtr.screen.*;
@@ -20,7 +21,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -135,9 +135,10 @@ public class PacketTrainDataGuiClient extends PacketTrainDataBase {
 		final BlockPos pos1 = packet.readBlockPos();
 		final BlockPos pos2 = packet.readBlockPos();
 		final int maxArrivals = packet.readInt();
+		final int linesPerArrival = packet.readInt();
 		minecraftClient.execute(() -> {
 			if (!(minecraftClient.screen instanceof PIDSConfigScreen)) {
-				UtilitiesClient.setScreen(minecraftClient, new PIDSConfigScreen(pos1, pos2, maxArrivals));
+				UtilitiesClient.setScreen(minecraftClient, new PIDSConfigScreen(pos1, pos2, maxArrivals, linesPerArrival));
 			}
 		});
 	}
@@ -168,7 +169,7 @@ public class PacketTrainDataGuiClient extends PacketTrainDataBase {
 			final ClientLevel world = minecraftClient.level;
 			final LocalPlayer player = minecraftClient.player;
 			if (!soundIdString.isEmpty() && world != null && player != null) {
-				world.playLocalSound(player.blockPosition(), new SoundEvent(new ResourceLocation(soundIdString)), SoundSource.BLOCKS, 1000000, 1, true);
+				world.playLocalSound(player.blockPosition(), RegistryUtilities.createSoundEvent(new ResourceLocation(soundIdString)), SoundSource.BLOCKS, 1000000, 1, false);
 			}
 		});
 	}
@@ -375,17 +376,21 @@ public class PacketTrainDataGuiClient extends PacketTrainDataBase {
 		RegistryClient.sendToServer(PACKET_ADD_BALANCE, packet);
 	}
 
-	public static void sendPIDSConfigC2S(BlockPos pos1, BlockPos pos2, String[] messages, boolean[] hideArrival, Set<Long> filterPlatformIds) {
+	public static void sendPIDSConfigC2S(BlockPos pos1, BlockPos pos2, String[] messages, boolean[] hideArrival, Set<Long> filterPlatformIds, int displayPage) {
 		final FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
 		packet.writeBlockPos(pos1);
 		packet.writeBlockPos(pos2);
 		packet.writeInt(messages.length);
-		for (int i = 0; i < messages.length; i++) {
-			packet.writeUtf(messages[i]);
-			packet.writeBoolean(hideArrival[i]);
+		for (String message : messages) {
+			packet.writeUtf(message);
+		}
+		packet.writeInt(hideArrival.length);
+		for (boolean b : hideArrival) {
+			packet.writeBoolean(b);
 		}
 		packet.writeInt(filterPlatformIds.size());
 		filterPlatformIds.forEach(packet::writeLong);
+		packet.writeInt(displayPage);
 		RegistryClient.sendToServer(PACKET_PIDS_UPDATE, packet);
 	}
 
