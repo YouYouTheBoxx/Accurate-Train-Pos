@@ -145,18 +145,20 @@ public class JonModelTrainRenderer extends TrainRendererBase implements IGui {
 				matrices.popPose();
 				matrices.pushPose();
 
-				matrices.translate(xBF, yBF + 1, zBF);
+				matrices.translate(xBF, yBF, zBF);
 				UtilitiesClient.rotateY(matrices, (float) Math.PI + yawBF);
 				UtilitiesClient.rotateX(matrices, (float) Math.PI + (hasPitch ? pitchBF : 0));
+				UtilitiesClient.rotateXDegrees(matrices, 180);
 
 				model.render(matrices, vertexConsumers, train, resolveTexture(textureId, textureId -> textureId + ".png"), light, doorLeftValue, doorRightValue, train.isDoorOpening(), carIndex, train.trainCars, !train.isReversed(), train.getIsOnRoute(), isTranslucentBatch, renderDetails, atPlatform, true, 0);
 
 				matrices.popPose();
 				matrices.pushPose();
 
-				matrices.translate(xBR, yBR + 1, zBR);
+				matrices.translate(xBR, yBR, zBR);
 				UtilitiesClient.rotateY(matrices, (float) Math.PI + yawBR);
 				UtilitiesClient.rotateX(matrices, (float) Math.PI + (hasPitch ? pitchBR : 0));
+				UtilitiesClient.rotateXDegrees(matrices, 180);
 
 				model.render(matrices, vertexConsumers, train, resolveTexture(textureId, textureId -> textureId + ".png"), light, doorLeftValue, doorRightValue, train.isDoorOpening(), carIndex, train.trainCars, !train.isReversed(), train.getIsOnRoute(), isTranslucentBatch, renderDetails, atPlatform, true, 1);
 			}
